@@ -1,0 +1,34 @@
+name: zlogbook
+description: Zlogbook —— 纯本地的个人数字资产台账
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+# 依赖策略：运行时依赖控制在 7 个，全部为活跃维护的官方/社区主流包。
+# 不引入代码生成（build_runner），CI 直接编译源码。
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.3
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  file_picker: ^8.1.2
+  share_plus: ^10.1.0
+  # zip 打包：锁定 3.6.1，4.x 的 ArchiveFile/ZipEncoder API 有破坏性变更。
+  archive: 3.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/features.txt

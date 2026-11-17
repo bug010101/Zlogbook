@@ -1,0 +1,21 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# 平台工程由 CI 运行 flutter create 生成，仓库只保留 Dart 源码
+android/
+ios/
+macos/
+windows/
+linux/
+web/
+
+# 编辑器
+.idea/
+.vscode/
+*.iml
+.DS_Store

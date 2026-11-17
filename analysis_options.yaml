@@ -1,0 +1,18 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: false
+    strict-raw-types: false
+  errors:
+    # 本地无 Dart 环境，CI 只在出现真正的编译错误时失败。
+    todo: ignore
+    deprecated_member_use: warning
+
+linter:
+  rules:
+    prefer_final_locals: false
+    avoid_print: true
+    always_declare_return_types: true
+    prefer_single_quotes: true
+    unnecessary_this: true

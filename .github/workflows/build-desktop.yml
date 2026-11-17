@@ -1,0 +1,49 @@
+name: build-desktop
+
+# 桌面端为可选产物（阶段五）。macOS release 默认启用 App Sandbox 且不含
+# network client 权限，发布版天然无法联网；Windows 无系统级网络开关。
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: 构建 ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            artifact: build/macos/Build/Products/Release
+          - os: windows-latest
+            platform: windows
+            artifact: build/windows/x64/runner/Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.50.0
+          channel: stable
+          cache: true
+
+      - name: 生成桌面工程脚手架
+        run: flutter create --platforms=${{ matrix.platform }} --org com.zlogbook --project-name zlogbook /tmp/scaffold
+
+      - name: 合并脚手架到仓库
+        shell: bash
+        run: |
+          mkdir -p ${{ matrix.platform }}
+          cp -R /tmp/scaffold/${{ matrix.platform }}/. ${{ matrix.platform }}/
+
+      - run: flutter pub get
+      - run: flutter build ${{ matrix.platform }} --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zlogbook-${{ matrix.platform }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
