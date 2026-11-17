@@ -5,6 +5,7 @@ import 'package:zlogbook/core/utils/text_utils.dart';
 import 'package:zlogbook/models/enums.dart';
 import 'package:zlogbook/models/identity.dart';
 import 'package:zlogbook/models/login_method.dart';
+import 'package:zlogbook/widgets/app_chips.dart';
 import 'package:zlogbook/widgets/app_icons.dart';
 import 'package:zlogbook/widgets/app_sheet.dart';
 
@@ -165,7 +166,7 @@ class _LoginEditorSheetState extends State<LoginEditorSheet> {
               spacing: 8,
               runSpacing: 8,
               children: LoginKind.values.map((LoginKind kind) {
-                return ChoiceChip(
+                return AppChip(
                   label: Text(kind.label),
                   avatar: Icon(AppIcons.login(kind), size: 15),
                   selected: _kind == kind,

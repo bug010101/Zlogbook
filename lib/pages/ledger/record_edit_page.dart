@@ -14,6 +14,7 @@ import 'package:zlogbook/pages/ledger/login_editor_sheet.dart';
 import 'package:zlogbook/services/haptics.dart';
 import 'package:zlogbook/state/app_scope.dart';
 import 'package:zlogbook/state/app_state.dart';
+import 'package:zlogbook/widgets/app_chips.dart';
 import 'package:zlogbook/widgets/app_icons.dart';
 import 'package:zlogbook/widgets/app_sheet.dart';
 import 'package:zlogbook/widgets/common.dart';
@@ -318,7 +319,7 @@ class _RecordEditPageState extends State<RecordEditPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: <Widget>[
-                    ChoiceChip(
+                    AppChip(
                       label: const Text(kUncategorizedLabel),
                       selected: _folderId == null,
                       onSelected: (_) {
@@ -329,7 +330,7 @@ class _RecordEditPageState extends State<RecordEditPage> {
                       },
                     ),
                     ...state.folders.map(
-                      (Folder folder) => ChoiceChip(
+                      (Folder folder) => AppChip(
                         label: Text(folder.name),
                         avatar: Icon(
                           AppIcons.folder(folder.icon),
@@ -353,7 +354,7 @@ class _RecordEditPageState extends State<RecordEditPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: RecordStatus.values.map((RecordStatus status) {
-                    return ChoiceChip(
+                    return AppChip(
                       label: Text(status.label),
                       selected: _status == status,
                       avatar: Icon(
@@ -750,7 +751,7 @@ class _CustomFieldEditor extends StatelessWidget {
               runSpacing: 8,
               children: def.options.map((String option) {
                 final bool selected = current == option;
-                return ChoiceChip(
+                return AppChip(
                   label: Text(option),
                   selected: selected,
                   onSelected: (_) => onChanged(selected ? null : option),
@@ -775,7 +776,7 @@ class _CustomFieldEditor extends StatelessWidget {
               runSpacing: 8,
               children: def.options.map((String option) {
                 final bool selected = current.contains(option);
-                return FilterChip(
+                return AppTagChip(
                   label: Text(option),
                   selected: selected,
                   onSelected: (bool picked) {

@@ -4,7 +4,7 @@ class AppInfo {
 
   static const String name = 'Zlogbook';
   static const String tagline = '个人数字资产台账';
-  static const String version = '1.0.0';
+  static const String version = '1.0.9';
 
   /// 数据格式版本，写入导出包 meta.json。
   static const int dataVersion = 1;

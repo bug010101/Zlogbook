@@ -9,6 +9,7 @@ import 'package:zlogbook/models/folder.dart';
 import 'package:zlogbook/services/haptics.dart';
 import 'package:zlogbook/state/app_scope.dart';
 import 'package:zlogbook/state/app_state.dart';
+import 'package:zlogbook/widgets/app_chips.dart';
 import 'package:zlogbook/widgets/app_sheet.dart';
 import 'package:zlogbook/widgets/common.dart';
 import 'package:zlogbook/widgets/dialogs.dart';
@@ -262,7 +263,7 @@ class _FieldEditorSheetState extends State<FieldEditorSheet> {
               spacing: 8,
               runSpacing: 8,
               children: FieldKind.values.map((FieldKind kind) {
-                return ChoiceChip(
+                return AppChip(
                   label: Text(kind.label),
                   selected: _kind == kind,
                   onSelected: (_) => setState(() {
@@ -290,7 +291,7 @@ class _FieldEditorSheetState extends State<FieldEditorSheet> {
             Wrap(
               spacing: 8,
               children: FieldScope.values.map((FieldScope scope) {
-                return ChoiceChip(
+                return AppChip(
                   label: Text(scope == FieldScope.all ? '全部记录' : '指定文件夹'),
                   selected: _scope == scope,
                   onSelected: (_) => setState(() => _scope = scope),
@@ -309,7 +310,7 @@ class _FieldEditorSheetState extends State<FieldEditorSheet> {
                   spacing: 8,
                   runSpacing: 8,
                   children: widget.folders.map((Folder folder) {
-                    return ChoiceChip(
+                    return AppChip(
                       label: Text(folder.name),
                       selected: _scopeFolderId == folder.id,
                       onSelected: (_) =>

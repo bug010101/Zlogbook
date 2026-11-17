@@ -4,6 +4,7 @@ import 'package:zlogbook/core/utils/ids.dart';
 import 'package:zlogbook/core/utils/text_utils.dart';
 import 'package:zlogbook/models/enums.dart';
 import 'package:zlogbook/models/identity.dart';
+import 'package:zlogbook/widgets/app_chips.dart';
 import 'package:zlogbook/widgets/app_icons.dart';
 
 /// 新建 / 编辑身份池条目。
@@ -80,7 +81,7 @@ class _IdentityEditorSheetState extends State<IdentityEditorSheet> {
               spacing: 8,
               runSpacing: 8,
               children: identityKinds.map((LoginKind kind) {
-                return ChoiceChip(
+                return AppChip(
                   label: Text(kind.label),
                   avatar: Icon(AppIcons.login(kind), size: 15),
                   selected: _kind == kind,
@@ -113,7 +114,7 @@ class _IdentityEditorSheetState extends State<IdentityEditorSheet> {
             Wrap(
               spacing: 8,
               children: IdentityStatus.values.map((IdentityStatus status) {
-                return ChoiceChip(
+                return AppChip(
                   label: Text(status.label),
                   selected: _status == status,
                   avatar: Icon(

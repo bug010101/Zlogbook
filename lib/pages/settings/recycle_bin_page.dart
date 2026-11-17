@@ -100,6 +100,28 @@ class RecycleBinPage extends StatelessWidget {
                           },
                           child: const Text('恢复'),
                         ),
+                        IconButton(
+                          tooltip: '永久删除',
+                          icon: const Icon(Icons.delete_forever_outlined, size: 20),
+                          color: const Color(0xFFA85A50),
+                          onPressed: () async {
+                            final bool ok = await confirmAction(
+                              context,
+                              title: '永久删除「${record.name}」？',
+                              message: '这条记录会从数据库里彻底移除，无法恢复。',
+                              confirmLabel: '永久删除',
+                              destructive: true,
+                            );
+                            if (!ok) {
+                              return;
+                            }
+                            await state.purgeRecord(record.id);
+                            await Haptics.medium();
+                            if (context.mounted) {
+                              showToast(context, '已永久删除');
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),

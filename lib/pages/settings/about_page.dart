@@ -42,7 +42,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 4),
           const Center(
             child: Text(
-              '${AppInfo.tagline} · ${AppInfo.version}',
+              '${AppInfo.tagline} · v${AppInfo.version}',
               style: TextStyle(fontSize: 12, color: kInkSoft),
             ),
           ),

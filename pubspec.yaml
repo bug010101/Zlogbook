@@ -1,7 +1,7 @@
 name: zlogbook
 description: Zlogbook —— 纯本地的个人数字资产台账
 publish_to: "none"
-version: 1.0.0+1
+version: 1.0.9+9
 
 # 下限由依赖链决定：file_picker 13 要 Dart 3.10 / Flutter 3.38，
 # share_plus 13 要 Dart 3.10 / Flutter 3.38.1。写低只会让报错更难懂。

@@ -62,8 +62,14 @@ ThemeData buildAppTheme() {
         borderSide: const BorderSide(color: kAccent, width: 1.4),
       ),
     ),
+    // 默认的 M3 选中态太浅，且会把 avatar（状态圆点）换成对勾。这里统一：
+    // 关掉对勾、选中换底色，具体描边与字重由 AppChip 统一处理。
     chipTheme: ChipThemeData(
       backgroundColor: kSurface,
+      selectedColor: kAccent.withValues(alpha: 0.14),
+      disabledColor: kPaper,
+      showCheckmark: false,
+      checkmarkColor: kAccent,
       side: const BorderSide(color: kLine),
       labelStyle: const TextStyle(fontSize: 13, color: kInk),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

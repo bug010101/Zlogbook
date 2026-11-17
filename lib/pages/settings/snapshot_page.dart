@@ -59,6 +59,26 @@ class _SnapshotPageState extends State<SnapshotPage> {
     showToast(context, '已恢复');
   }
 
+  Future<void> _delete(File file) async {
+    final bool ok = await confirmAction(
+      context,
+      title: '删除这份快照？',
+      message: '只删快照本身，当前数据不受影响。',
+      confirmLabel: '删除',
+      destructive: true,
+    );
+    if (!ok) {
+      return;
+    }
+    await AppDatabase.instance.deleteSnapshot(file);
+    await Haptics.medium();
+    if (!mounted) {
+      return;
+    }
+    _refresh();
+    showToast(context, '快照已删除');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,6 +152,12 @@ class _SnapshotPageState extends State<SnapshotPage> {
                       TextButton(
                         onPressed: () => _restore(file),
                         child: const Text('恢复'),
+                      ),
+                      IconButton(
+                        tooltip: '删除这份快照',
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        color: kInkSoft,
+                        onPressed: () => _delete(file),
                       ),
                     ],
                   ),

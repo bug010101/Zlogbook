@@ -15,6 +15,7 @@ import 'package:zlogbook/pages/ledger/timeline_view.dart';
 import 'package:zlogbook/services/haptics.dart';
 import 'package:zlogbook/state/app_scope.dart';
 import 'package:zlogbook/state/app_state.dart';
+import 'package:zlogbook/widgets/app_icons.dart';
 import 'package:zlogbook/widgets/app_sheet.dart';
 import 'package:zlogbook/widgets/common.dart';
 import 'package:zlogbook/widgets/dialogs.dart';
@@ -330,8 +331,7 @@ class _LedgerPageState extends State<LedgerPage> {
               ),
             ),
           ),
-          _folderBar(state),
-          _statusBar(state),
+          _filterBar(state),
           const SizedBox(height: 4),
           Expanded(
             child: records.isEmpty
@@ -455,38 +455,88 @@ class _LedgerPageState extends State<LedgerPage> {
     );
   }
 
-  Widget _folderBar(AppState state) {
-    final List<Folder> folders = state.folders;
-    return SizedBox(
-      height: 40,
+  /// 「全部」在下拉里补成「全部状态」，与收起时的文案保持一致。
+  String _statusLabel(StatusFilter filter) {
+    return filter == StatusFilter.all ? '全部状态' : filter.label;
+  }
+
+  Widget _filterBar(AppState state) {
+    final bool folderActive = state.folderFilter != null;
+    final String folderLabel;
+    if (!folderActive) {
+      folderLabel = '全部分类';
+    } else if (state.folderFilter == AppState.uncategorizedFilterId) {
+      folderLabel = kUncategorizedLabel;
+    } else {
+      folderLabel = state.folderName(state.folderFilter);
+    }
+    final RecordStatus? status = state.statusFilter.recordStatus;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 6, 2),
       child: Row(
         children: <Widget>[
-          Expanded(
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 16, right: 4),
-              children: <Widget>[
-                _chip(
-                  label: '全部',
-                  selected: state.folderFilter == null,
-                  onTap: () => state.setFolderFilter(null),
+          Flexible(
+            child: _FilterDropdown<String>(
+              leading: Icon(
+                Icons.folder_outlined,
+                size: 16,
+                color: folderActive ? kAccent : kInkSoft,
+              ),
+              label: folderLabel,
+              active: folderActive,
+              onSelected: (String value) =>
+                  state.setFolderFilter(value.isEmpty ? null : value),
+              items: <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: '',
+                  child: Text('全部分类'),
                 ),
-                for (final Folder folder in folders)
-                  _chip(
-                    label: folder.name,
-                    selected: state.folderFilter == folder.id,
-                    onTap: () => state.setFolderFilter(folder.id),
+                for (final Folder folder in state.folders)
+                  PopupMenuItem<String>(
+                    value: folder.id,
+                    child: Row(
+                      children: <Widget>[
+                        Icon(AppIcons.folder(folder.icon), size: 16),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            folder.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                _chip(
-                  label: kUncategorizedLabel,
-                  selected: state.folderFilter == AppState.uncategorizedFilterId,
-                  onTap: () => state.setFolderFilter(
-                    state.folderFilter == AppState.uncategorizedFilterId
-                        ? null
-                        : AppState.uncategorizedFilterId,
-                  ),
+                const PopupMenuItem<String>(
+                  value: AppState.uncategorizedFilterId,
+                  child: Text(kUncategorizedLabel),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: _FilterDropdown<StatusFilter>(
+              leading: Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: status == null ? kInkSoft : AppIcons.statusColor(status),
+                ),
+              ),
+              label: _statusLabel(state.statusFilter),
+              active: state.statusFilter != StatusFilter.all,
+              onSelected: state.setStatusFilter,
+              items: StatusFilter.values
+                  .map(
+                    (StatusFilter filter) => PopupMenuItem<StatusFilter>(
+                      value: filter,
+                      child: Text(_statusLabel(filter)),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
           IconButton(
@@ -502,53 +552,63 @@ class _LedgerPageState extends State<LedgerPage> {
       ),
     );
   }
+}
 
-  Widget _statusBar(AppState state) {
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: <Widget>[
-          for (final StatusFilter filter in StatusFilter.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _chip(
-                label: filter.label,
-                selected: state.statusFilter == filter,
-                onTap: () => state.setStatusFilter(filter),
+/// 顶部筛选用的下拉胶囊：收起时只占一个标签宽度，点开再选。
+class _FilterDropdown<T> extends StatelessWidget {
+  const _FilterDropdown({
+    required this.leading,
+    required this.label,
+    required this.active,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final Widget leading;
+  final String label;
+  final bool active;
+  final List<PopupMenuEntry<T>> items;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<T>(
+      tooltip: '',
+      position: PopupMenuPosition.under,
+      onSelected: onSelected,
+      itemBuilder: (BuildContext ctx) => items,
+      child: Container(
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: active ? kAccent.withValues(alpha: 0.10) : kSurface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: active ? kAccent : kLine),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            leading,
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: active ? kAccent : kInk,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _chip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? kAccent : kSurface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? kAccent : kLine),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: selected ? Colors.white : kInk,
+            const SizedBox(width: 2),
+            Icon(
+              Icons.expand_more,
+              size: 16,
+              color: active ? kAccent : kInkSoft,
             ),
-          ),
+          ],
         ),
       ),
     );

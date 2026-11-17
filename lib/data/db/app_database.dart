@@ -191,6 +191,17 @@ class AppDatabase {
     return files;
   }
 
+  /// 删除单份快照。文件已不存在或正被占用都不算失败。
+  Future<void> deleteSnapshot(File snapshot) async {
+    try {
+      if (snapshot.existsSync()) {
+        await snapshot.delete();
+      }
+    } catch (_) {
+      // 占用中或已删除，忽略。
+    }
+  }
+
   Future<void> _trimSnapshots(int keep) async {
     final List<File> files = await listSnapshots();
     for (int i = keep; i < files.length; i++) {

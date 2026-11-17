@@ -107,7 +107,7 @@ class SettingsPage extends StatelessWidget {
             _tile(
               icon: Icons.info_outline,
               title: '关于',
-              subtitle: '${AppInfo.name} ${AppInfo.version}',
+              subtitle: '${AppInfo.name} v${AppInfo.version}',
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const AboutPage()),
               ),
