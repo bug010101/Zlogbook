@@ -1,0 +1,193 @@
+name: release
+
+# 只有推送 v* tag 才构建与发版；日常提交只跑 analyze，不产出任何安装包。
+# 一次 tag 出三份产物：Android APK、macOS 应用、Windows 应用，统一挂到同一个 Release。
+# workflow_dispatch 用于不想打 tag 时手动验证三条构建链路（此时不建 Release）。
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 准备 JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: 准备 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.50.0
+          channel: stable
+          cache: true
+
+      # 脚手架生成在工程目录之外：仓库只存 Dart 源码，也不会被 flutter analyze 扫到。
+      # 必须用相对路径——Windows 上 bash 的 /tmp 与 Flutter 解析到的 C:\tmp 不是同一处。
+      - name: 生成 Android 工程脚手架
+        run: |
+          rm -rf ../scaffold
+          flutter create \
+            --platforms=android \
+            --org com.zlogbook \
+            --project-name zlogbook \
+            ../scaffold
+
+      - name: 合并脚手架到仓库
+        run: |
+          mkdir -p android
+          rsync -a ../scaffold/android/ android/
+
+      - name: 应用自定义清单（禁止联网 / 应用名 Zlogbook）
+        run: cp ci/android/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+
+      - name: 拉取依赖
+        run: flutter pub get
+
+      - name: 静态分析
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: 构建 release APK
+        run: flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: 校验包内无 INTERNET 权限
+        run: |
+          set -e
+          MANIFEST=$(find build/app/intermediates -name AndroidManifest.xml -path "*merged*" | head -1)
+          echo "merged manifest: $MANIFEST"
+          if [ -n "$MANIFEST" ] && grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+            echo "::error::APK 声明了 INTERNET 权限，违反纯本地约束"
+            exit 1
+          fi
+          echo "未声明 INTERNET 权限，检查通过"
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: zlogbook-android
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  desktop:
+    name: ${{ matrix.platform }} 应用
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            archive: zlogbook-macos.zip
+          - os: windows-latest
+            platform: windows
+            archive: zlogbook-windows.zip
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 准备 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.50.0
+          channel: stable
+          cache: true
+
+      - name: 生成桌面工程脚手架
+        shell: bash
+        run: |
+          rm -rf ../scaffold
+          flutter create \
+            --platforms=${{ matrix.platform }} \
+            --org com.zlogbook \
+            --project-name zlogbook \
+            ../scaffold
+
+      - name: 合并脚手架到仓库
+        shell: bash
+        run: |
+          mkdir -p ${{ matrix.platform }}
+          cp -R ../scaffold/${{ matrix.platform }}/. ${{ matrix.platform }}/
+
+      # 默认模板的 Release 沙盒只开 app-sandbox，选完文件读不到内容。
+      # 加上 user-selected 读写权限，导入/导出在沙盒内才可用。
+      - name: macOS 补齐沙盒文件权限
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cat > macos/Runner/Release.entitlements <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>com.apple.security.app-sandbox</key>
+              <true/>
+              <key>com.apple.security.files.user-selected.read-write</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: 拉取依赖
+        run: flutter pub get
+
+      - name: 构建 release
+        env:
+          # CI 上没有开发者证书，跳过签名；本地自用直接跑
+          CODE_SIGNING_ALLOWED: NO
+        run: flutter build ${{ matrix.platform }} --release
+
+      # 打包成单个压缩包：.app 是目录，直接上传下载回来不好用。
+      - name: 打包 macOS 产物
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cd build/macos/Build/Products/Release
+          ditto -c -k --sequesterRsrc --keepParent *.app "$GITHUB_WORKSPACE/${{ matrix.archive }}"
+
+      - name: 打包 Windows 产物
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* `
+            -DestinationPath ${{ matrix.archive }} -Force
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: zlogbook-${{ matrix.platform }}
+          path: ${{ matrix.archive }}
+          if-no-files-found: error
+
+  publish:
+    name: 发布 Release
+    # 桌面端失败不连累 Android：只要 APK 成功就把 Release 建出来，
+    # 桌面产物成功才一起挂上去。
+    needs: [android, desktop]
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.android.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 汇总产物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: zlogbook-*
+          path: dist
+          merge-multiple: true
+
+      - name: 列出待发布文件
+        run: ls -lh dist
+
+      - name: 创建 Release 并挂上全部产物
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

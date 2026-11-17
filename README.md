@@ -60,24 +60,35 @@ ci/android/AndroidManifest.xml  构建时覆盖的清单，禁网 + 应用名
 
 ## 构建
 
-本地不需要任何 Flutter 环境，构建全部在 GitHub Actions 云端完成。**日常提交不会触发构建，只有推送版本 tag 才构建并发布到 Release。**
+本地不需要任何 Flutter 环境，构建全部在 GitHub Actions 云端完成。两步走：
 
-发一版：
+**1. 推代码 → 只做静态检查**
+
+`analyze.yml` 在 push 到 `main` 时跑 `flutter pub get` + `flutter analyze`，约 1 分钟，不产出任何安装包。编译错误在这里就暴露，不用等到打 tag。
+
+**2. 检查通过 → 打 tag → 出三端产物**
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
+git tag v1.0.0 && git push origin v1.0.0
 ```
 
-触发后依次执行：
+`release.yml` 触发三个 job：
 
-1. `flutter create --platforms=android` 生成 Android 工程脚手架（仓库不存平台目录）
-2. 用 `ci/android/AndroidManifest.xml` 覆盖清单，移除 `INTERNET` 权限并设置应用名
-3. `flutter build apk --release`，产物上传为 artifact，同时创建或更新同名 Release 并挂上 APK
-4. 构建后校验合并清单里没有 `INTERNET` 权限，有则构建失败
+| job | 产物 |
+|---|---|
+| android | `app-release.apk`（`ubuntu-latest`） |
+| macos / windows | `zlogbook-macos.zip`、`zlogbook-windows.zip`（各自原生 runner） |
+| publish | 汇总三份产物，创建 Release 并全部挂上 |
 
-不想打 tag、只想确认代码能编译时，在 Actions 页面手动 Run workflow（`workflow_dispatch`），此时只上传 artifact、不建 Release。
+Android 的构建步骤：`flutter create --platforms=android` 生成脚手架（仓库不存平台目录）→ 用 `ci/android/AndroidManifest.xml` 覆盖清单，移除 `INTERNET` 权限 → `flutter build apk --release` → 校验合并后的清单里没有 `INTERNET`，有则构建失败。
 
-Flutter 版本固定为 `3.50.0`（`.github/workflows/build-android.yml`），依赖锁定在 `pubspec.yaml`。
+桌面端由 `flutter create` 生成对应平台工程后构建；macOS 会补上沙盒的文件读写权限，否则选完文件读不到内容。CI 无开发者证书，macOS 跳过签名，产物是未签名的 `.app`，本机首次打开需右键「打开」。
+
+桌面端失败不会连累 APK：`publish` 只要求 Android 成功，桌面产物成功才一并挂上。
+
+不想打 tag、只想验证三条链路时，在 Actions 页面手动 Run workflow，此时只上传 artifact、不建 Release。
+
+Flutter 版本固定为 `3.50.0`（`.github/workflows/release.yml` 与 `analyze.yml`），依赖锁定在 `pubspec.yaml`。
 
 ## 数据格式
 
