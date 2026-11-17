@@ -4,15 +4,16 @@
 build/
 .flutter-plugins
 .flutter-plugins-dependencies
-pubspec.lock
 
-# 平台工程由 CI 运行 flutter create 生成，仓库只保留 Dart 源码
-android/
-ios/
-macos/
-windows/
-linux/
-web/
+# 平台工程由 CI 运行 flutter create 生成，仓库只保留 Dart 源码。
+# 必须带前导斜杠——只忽略仓库根目录下的平台目录；
+# 写成 android/ 会连 ci/android/ 一起忽略，构建时找不到清单文件。
+/android/
+/ios/
+/macos/
+/windows/
+/linux/
+/web/
 
 # 编辑器
 .idea/
