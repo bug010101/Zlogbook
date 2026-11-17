@@ -87,7 +87,7 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            archive: zlogbook-macos.zip
+            archive: zlogbook-macos.dmg
           - os: windows-latest
             platform: windows
             archive: zlogbook-windows.zip
@@ -146,13 +146,22 @@ jobs:
           CODE_SIGNING_ALLOWED: NO
         run: flutter build ${{ matrix.platform }} --release
 
-      # 打包成单个压缩包：.app 是目录，直接上传下载回来不好用。
-      - name: 打包 macOS 产物
+      # 打成 DMG：里面放 .app 和 /Applications 快捷方式，装的时候拖一下就完事。
+      # 用 ditto 而不是 cp，是为了保留 .app 内部的符号链接与权限位。
+      - name: 打包 macOS 产物（DMG）
         if: matrix.platform == 'macos'
         shell: bash
         run: |
-          cd build/macos/Build/Products/Release
-          ditto -c -k --sequesterRsrc --keepParent *.app "$GITHUB_WORKSPACE/${{ matrix.archive }}"
+          set -e
+          APP=$(ls -d build/macos/Build/Products/Release/*.app | head -1)
+          NAME=$(basename "$APP" .app)
+          STAGE=build/dmg-stage
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          ditto "$APP" "$STAGE/$NAME.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "$NAME" -srcfolder "$STAGE" -ov -format UDZO \
+            "$GITHUB_WORKSPACE/${{ matrix.archive }}"
 
       - name: 打包 Windows 产物
         if: matrix.platform == 'windows'

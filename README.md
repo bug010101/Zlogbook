@@ -77,12 +77,12 @@ git tag v1.0.0 && git push origin v1.0.0
 | job | 产物 |
 |---|---|
 | android | `app-release.apk`（`ubuntu-latest`） |
-| macos / windows | `zlogbook-macos.zip`、`zlogbook-windows.zip`（各自原生 runner） |
+| macos / windows | `zlogbook-macos.dmg`、`zlogbook-windows.zip`（各自原生 runner） |
 | publish | 汇总三份产物，创建 Release 并全部挂上 |
 
 Android 的构建步骤：`flutter create --platforms=android` 生成脚手架（仓库不存平台目录）→ 用 `ci/android/AndroidManifest.xml` 覆盖清单，移除 `INTERNET` 权限 → `flutter build apk --release` → 校验合并后的清单里没有 `INTERNET`，有则构建失败。
 
-桌面端由 `flutter create` 生成对应平台工程后构建；macOS 会补上沙盒的文件读写权限，否则选完文件读不到内容。CI 无开发者证书，macOS 跳过签名，产物是未签名的 `.app`，本机首次打开需右键「打开」。
+桌面端由 `flutter create` 生成对应平台工程后构建；macOS 会补上沙盒的文件读写权限，否则选完文件读不到内容，产物打成 DMG（内含 `/Applications` 快捷方式，拖入即安装）。CI 无开发者证书，macOS 跳过签名，首次打开需右键「打开」，或执行 `xattr -dr com.apple.quarantine /Applications/Zlogbook.app`。
 
 桌面端失败不会连累 APK：`publish` 只要求 Android 成功，桌面产物成功才一并挂上。
 
