@@ -1,7 +1,7 @@
 name: release
 
 # 只有推送 v* tag 才构建与发版；日常提交只跑 analyze，不产出任何安装包。
-# 一次 tag 出三份产物：Android APK、macOS 应用、Windows 应用，统一挂到同一个 Release。
+# 一次 tag 出三份产物，统一挂到同一个 Release，文件名带版本号与平台架构。
 # workflow_dispatch 用于不想打 tag 时手动验证三条构建链路（此时不建 Release）。
 on:
   push:
@@ -32,6 +32,19 @@ jobs:
           channel: stable
           cache: true
 
+      # 版本号取自 tag（v1.0.7 -> 1.0.7）；手动触发时退回 pubspec。
+      - name: 读取版本号
+        id: ver
+        run: |
+          set -e
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml | head -1)
+          fi
+          VERSION=$(printf '%s' "$VERSION" | tr -cd '0-9.')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       # 脚手架生成在工程目录之外：仓库只存 Dart 源码，也不会被 flutter analyze 扫到。
       # 必须用相对路径——Windows 上 bash 的 /tmp 与 Flutter 解析到的 C:\tmp 不是同一处。
       - name: 生成 Android 工程脚手架
@@ -58,7 +71,10 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: 构建 release APK
-        run: flutter build apk --release --build-number=${{ github.run_number }}
+        run: |
+          flutter build apk --release \
+            --build-name=${{ steps.ver.outputs.version }} \
+            --build-number=${{ github.run_number }}
 
       - name: 校验包内无 INTERNET 权限
         run: |
@@ -71,11 +87,16 @@ jobs:
           fi
           echo "未声明 INTERNET 权限，检查通过"
 
+      - name: 按版本号命名产物
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "Zlogbook-${{ steps.ver.outputs.version }}-android.apk"
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: zlogbook-android
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: Zlogbook-${{ steps.ver.outputs.version }}-android.apk
           if-no-files-found: error
 
   desktop:
@@ -87,10 +108,10 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            archive: zlogbook-macos.dmg
+            ext: dmg
           - os: windows-latest
             platform: windows
-            archive: zlogbook-windows.zip
+            ext: zip
     steps:
       - name: 检出源码
         uses: actions/checkout@v4
@@ -101,6 +122,26 @@ jobs:
           flutter-version: 3.50.0
           channel: stable
           cache: true
+
+      # 产物名统一为 Zlogbook-<版本>-<平台>-<架构>.<扩展名>。
+      # 架构按 runner 实际架构取，不写死：GitHub 的 macos-latest 是 arm64。
+      - name: 读取版本号与产物名
+        id: name
+        shell: bash
+        run: |
+          set -e
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml | head -1)
+          fi
+          VERSION=$(printf '%s' "$VERSION" | tr -cd '0-9.')
+          case "$(uname -m)" in
+            arm64 | aarch64) ARCH=arm64 ;;
+            *) ARCH=x64 ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "file=Zlogbook-${VERSION}-${{ matrix.platform }}-${ARCH}.${{ matrix.ext }}" >> "$GITHUB_OUTPUT"
 
       - name: 生成桌面工程脚手架
         shell: bash
@@ -160,21 +201,21 @@ jobs:
           mkdir -p "$STAGE"
           ditto "$APP" "$STAGE/$NAME.app"
           ln -s /Applications "$STAGE/Applications"
-          hdiutil create -volname "$NAME" -srcfolder "$STAGE" -ov -format UDZO \
-            "$GITHUB_WORKSPACE/${{ matrix.archive }}"
+          hdiutil create -volname "Zlogbook" -srcfolder "$STAGE" -ov -format UDZO \
+            "$GITHUB_WORKSPACE/${{ steps.name.outputs.file }}"
 
       - name: 打包 Windows 产物
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           Compress-Archive -Path build\windows\x64\runner\Release\* `
-            -DestinationPath ${{ matrix.archive }} -Force
+            -DestinationPath "${{ steps.name.outputs.file }}" -Force
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: zlogbook-${{ matrix.platform }}
-          path: ${{ matrix.archive }}
+          path: ${{ steps.name.outputs.file }}
           if-no-files-found: error
 
   publish:
