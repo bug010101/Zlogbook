@@ -29,11 +29,11 @@ class ImportPlanner {
     final List<List<String>> table = source.records;
 
     if (table.isEmpty) {
-      return ImportPlan(
-        candidates: const <ImportCandidate>[],
-        newFieldLabels: const <String>[],
-        newFolderNames: const <String>[],
-        warnings: const <String>['文件里没有内容'],
+      return const ImportPlan(
+        candidates: <ImportCandidate>[],
+        newFieldLabels: <String>[],
+        newFolderNames: <String>[],
+        warnings: <String>['文件里没有内容'],
         skippedRows: 0,
       );
     }

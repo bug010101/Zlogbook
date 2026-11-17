@@ -6,9 +6,7 @@ import 'package:zlogbook/data/csv/ledger_parser.dart';
 import 'package:zlogbook/pages/settings/csv_format_panel.dart';
 import 'package:zlogbook/services/import_service.dart';
 import 'package:zlogbook/state/app_scope.dart';
-import 'package:zlogbook/state/app_state.dart';
 import 'package:zlogbook/widgets/common.dart';
-import 'package:zlogbook/widgets/dialogs.dart';
 
 /// 导入四步：选文件 -> 预览 -> 选策略 -> 确认写入（写入前自动快照）。
 class ImportPage extends StatefulWidget {

@@ -80,8 +80,8 @@ class LedgerParser {
         folders = rows;
       } else if (base == 'field_defs.csv') {
         fieldDefs = rows;
-      } else if (records == null) {
-        records = rows;
+      } else {
+        records ??= rows;
       }
     }
 

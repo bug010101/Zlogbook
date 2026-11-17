@@ -181,7 +181,6 @@ extension StatusFilterX on StatusFilter {
       case StatusFilter.expiring:
         return null;
     }
-    return null;
   }
 }
 

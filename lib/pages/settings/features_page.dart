@@ -115,7 +115,6 @@ class FeaturesPage extends StatelessWidget {
           ),
         );
     }
-    return const SizedBox.shrink();
   }
 
   TextSpan _span(List<FeatureSegment> segments, TextStyle base) {

@@ -31,18 +31,20 @@ jobs:
           channel: stable
           cache: true
 
+      # 脚手架生成在工程目录之外：仓库只存 Dart 源码，且不会被 flutter analyze 扫到。
       - name: 生成 Android 工程脚手架
         run: |
+          rm -rf ../scaffold
           flutter create \
             --platforms=android \
             --org com.zlogbook \
             --project-name zlogbook \
-            /tmp/scaffold
+            ../scaffold
 
       - name: 合并脚手架到仓库
         run: |
           mkdir -p android
-          rsync -a /tmp/scaffold/android/ android/
+          rsync -a ../scaffold/android/ android/
           ls android
           ls android/app
 

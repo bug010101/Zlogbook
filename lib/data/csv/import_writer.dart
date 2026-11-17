@@ -13,7 +13,6 @@ import 'package:zlogbook/models/enums.dart';
 import 'package:zlogbook/models/field_def.dart';
 import 'package:zlogbook/models/folder.dart';
 import 'package:zlogbook/models/identity.dart';
-import 'package:zlogbook/models/record.dart';
 
 class ImportOutcome {
   const ImportOutcome({

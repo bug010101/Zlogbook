@@ -68,6 +68,8 @@ class RecordDetailPage extends StatelessWidget {
   }
 
   Future<void> _delete(BuildContext context, AssetRecord record) async {
+    final AppState state = AppScope.read(context);
+    final NavigatorState navigator = Navigator.of(context);
     final bool ok = await confirmAction(
       context,
       title: '删除「${record.name}」？',
@@ -78,8 +80,6 @@ class RecordDetailPage extends StatelessWidget {
     if (!ok) {
       return;
     }
-    final AppState state = AppScope.read(context);
-    final NavigatorState navigator = Navigator.of(context);
     await state.deleteRecord(record.id);
     await Haptics.medium();
     if (!context.mounted) {

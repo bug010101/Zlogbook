@@ -1,0 +1,28 @@
+name: analyze
+
+# 只做静态检查，不产出任何安装包：约 1 分钟，用来在推代码时就暴露编译错误，
+# 避免等到打 tag 才发现 analyze 不过（tag 才做打包与 Release）。
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: 静态分析
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.50.0
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # 只把 error 当作失败；弃用类 warning 不拦。
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings

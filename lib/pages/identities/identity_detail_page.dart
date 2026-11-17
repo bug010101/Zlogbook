@@ -22,6 +22,7 @@ class IdentityDetailPage extends StatelessWidget {
   Identity? _find(AppState state) => state.identityById(identityId);
 
   Future<void> _edit(BuildContext context, Identity identity) async {
+    final AppState state = AppScope.read(context);
     final Identity? updated = await showAppSheet<Identity>(
       context,
       IdentityEditorSheet(existing: identity),
@@ -29,11 +30,12 @@ class IdentityDetailPage extends StatelessWidget {
     if (updated == null) {
       return;
     }
-    await AppScope.read(context).saveIdentity(updated);
+    await state.saveIdentity(updated);
   }
 
   Future<void> _delete(BuildContext context, Identity identity) async {
     final AppState state = AppScope.read(context);
+    final NavigatorState navigator = Navigator.of(context);
     final int count = state.usageCount(identity.id);
     final bool ok = await confirmAction(
       context,
@@ -48,7 +50,6 @@ class IdentityDetailPage extends StatelessWidget {
     if (!ok) {
       return;
     }
-    final NavigatorState navigator = Navigator.of(context);
     await state.deleteIdentity(identity);
     await Haptics.medium();
     navigator.pop();

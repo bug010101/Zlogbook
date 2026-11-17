@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:zlogbook/core/csv_columns.dart';
 import 'package:zlogbook/core/theme.dart';
 import 'package:zlogbook/services/export_service.dart';
-import 'package:zlogbook/widgets/common.dart';
 import 'package:zlogbook/widgets/dialogs.dart';
 
 /// 全屏的 CSV 格式说明。表格内容全部由列名常量生成，与解析逻辑同源。

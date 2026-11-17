@@ -1,11 +1,11 @@
 name: build-desktop
 
-# 桌面端为可选产物（阶段五）。macOS release 默认启用 App Sandbox 且不含
-# network client 权限，发布版天然无法联网；Windows 无系统级网络开关。
+# 桌面端属于阶段五，不随版本 tag 自动构建——tag 只产出 Android APK 与 Release。
+# 需要桌面产物时在 Actions 页面手动 Run workflow。
+# macOS release 默认启用 App Sandbox 且不含 network client 权限，发布版天然无法联网；
+# Windows 无系统级网络开关。
 on:
   workflow_dispatch:
-  push:
-    tags: ["v*"]
 
 jobs:
   build:
@@ -30,17 +30,31 @@ jobs:
           channel: stable
           cache: true
 
+      # 脚手架生成在工程目录之外：既不污染仓库，也不会被 flutter analyze 扫到。
+      # 必须用相对路径——Windows 上 bash 的 /tmp 与 Flutter 解析到的 C:\tmp 不是同一处。
       - name: 生成桌面工程脚手架
-        run: flutter create --platforms=${{ matrix.platform }} --org com.zlogbook --project-name zlogbook /tmp/scaffold
+        shell: bash
+        run: |
+          rm -rf ../scaffold
+          flutter create \
+            --platforms=${{ matrix.platform }} \
+            --org com.zlogbook \
+            --project-name zlogbook \
+            ../scaffold
 
       - name: 合并脚手架到仓库
         shell: bash
         run: |
           mkdir -p ${{ matrix.platform }}
-          cp -R /tmp/scaffold/${{ matrix.platform }}/. ${{ matrix.platform }}/
+          cp -R ../scaffold/${{ matrix.platform }}/. ${{ matrix.platform }}/
 
       - run: flutter pub get
-      - run: flutter build ${{ matrix.platform }} --release
+
+      - name: 构建 release
+        env:
+          # CI 上没有开发者证书，跳过签名；本地自用直接跑
+          CODE_SIGNING_ALLOWED: NO
+        run: flutter build ${{ matrix.platform }} --release
 
       - uses: actions/upload-artifact@v4
         with:

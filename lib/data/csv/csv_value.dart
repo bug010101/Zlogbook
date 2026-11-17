@@ -30,7 +30,6 @@ class CsvValue {
       case FieldKind.text:
         return '$value';
     }
-    return '';
   }
 
   static Object? toExtra(String raw, FieldKind kind) {
@@ -49,7 +48,6 @@ class CsvValue {
       case FieldKind.text:
         return text;
     }
-    return null;
   }
 
   static String boolCell(bool value) => value ? '是' : '否';

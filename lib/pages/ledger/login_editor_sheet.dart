@@ -40,7 +40,7 @@ class _LoginEditorSheetState extends State<LoginEditorSheet> {
       TextEditingController(text: widget.initial?.note ?? '');
   late bool _isPrimary = widget.initial?.isPrimary ?? false;
   late bool _usable = widget.initial?.usable ?? true;
-  String? _identityId = widget.initial?.identityId;
+  late String? _identityId = widget.initial?.identityId;
   bool _storeInPool = false;
 
   @override

@@ -26,6 +26,7 @@ class FolderManagePage extends StatelessWidget {
   const FolderManagePage({super.key});
 
   Future<void> _add(BuildContext context) async {
+    final AppState state = AppScope.read(context);
     final FolderDraft? draft = await showAppSheet<FolderDraft>(
       context,
       const FolderEditorSheet(),
@@ -33,7 +34,7 @@ class FolderManagePage extends StatelessWidget {
     if (draft == null) {
       return;
     }
-    await AppScope.read(context).createFolder(
+    await state.createFolder(
       name: draft.name,
       icon: draft.icon,
       color: draft.color,
@@ -41,6 +42,7 @@ class FolderManagePage extends StatelessWidget {
   }
 
   Future<void> _edit(BuildContext context, Folder folder) async {
+    final AppState state = AppScope.read(context);
     final FolderDraft? draft = await showAppSheet<FolderDraft>(
       context,
       FolderEditorSheet(existing: folder),
@@ -48,7 +50,7 @@ class FolderManagePage extends StatelessWidget {
     if (draft == null) {
       return;
     }
-    await AppScope.read(context).updateFolder(
+    await state.updateFolder(
       folder.copyWith(name: draft.name, icon: draft.icon, color: draft.color),
     );
   }

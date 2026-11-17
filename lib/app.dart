@@ -7,10 +7,9 @@ import 'package:zlogbook/state/app_scope.dart';
 import 'package:zlogbook/state/app_state.dart';
 
 class ZlogbookApp extends StatelessWidget {
-  const ZlogbookApp({super.key, required this.state, this.fatalError});
+  const ZlogbookApp({super.key, required this.state});
 
   final AppState state;
-  final String? fatalError;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +25,16 @@ class ZlogbookApp extends StatelessWidget {
           Locale('en', 'US'),
         ],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: fatalError == null
-            ? const HomePage()
-            : _StartupErrorPage(message: fatalError!, state: state),
+        // 启动失败时停在错误页，「重试」成功后 error 归零，这里自动切回主界面。
+        home: ListenableBuilder(
+          listenable: state,
+          builder: (BuildContext context, Widget? child) {
+            final String? error = state.error;
+            return error == null
+                ? const HomePage()
+                : _StartupErrorPage(message: error, state: state);
+          },
+        ),
       ),
     );
   }

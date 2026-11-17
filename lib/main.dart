@@ -10,5 +10,5 @@ Future<void> main() async {
   final AppState state = AppState();
   await state.bootstrap();
 
-  runApp(ZlogbookApp(state: state, fatalError: state.error));
+  runApp(ZlogbookApp(state: state));
 }

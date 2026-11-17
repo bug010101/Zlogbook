@@ -19,7 +19,6 @@ extension ImportStrategyX on ImportStrategy {
       case ImportStrategy.createNew:
         return 'id 相同的记录另存为一条新记录';
     }
-    return '';
   }
 }
 
@@ -68,7 +67,7 @@ class ImportCandidate {
   final DateTime? expiresAt;
   final ImportRowState state;
 
-  ImportCandidate withState(ImportRowState value) {
+  ImportCandidate withState(ImportRowState next) {
     return ImportCandidate(
       line: line,
       name: name,
@@ -85,7 +84,7 @@ class ImportCandidate {
       url: url,
       value: value,
       expiresAt: expiresAt,
-      state: value,
+      state: next,
     );
   }
 

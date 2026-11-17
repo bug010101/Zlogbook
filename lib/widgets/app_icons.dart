@@ -79,7 +79,6 @@ class AppIcons {
       case LoginKind.other:
         return Icons.more_horiz;
     }
-    return Icons.more_horiz;
   }
 
   static Color statusColor(RecordStatus status) {
@@ -93,7 +92,6 @@ class AppIcons {
       case RecordStatus.deactivated:
         return const Color(0xFFA85A50);
     }
-    return const Color(0xFF6B7269);
   }
 
   static Color identityStatusColor(IdentityStatus status) {
@@ -105,7 +103,6 @@ class AppIcons {
       case IdentityStatus.deactivated:
         return const Color(0xFFA85A50);
     }
-    return const Color(0xFF6B7269);
   }
 
   static const Color expiredColor = kInkSoft;

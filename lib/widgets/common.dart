@@ -143,7 +143,7 @@ class ExpiryBadge extends StatelessWidget {
         : soon
             ? const Color(0xFFB5842E)
             : kInkSoft;
-    final String label = expired ? '已过期 ${-days} 天' : '剩 ${days} 天';
+    final String label = expired ? '已过期 ${-days} 天' : '剩 $days 天';
 
     return Row(
       mainAxisSize: MainAxisSize.min,

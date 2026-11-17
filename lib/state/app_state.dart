@@ -223,7 +223,6 @@ class AppState extends ChangeNotifier {
         }
         return left.compareTo(right);
     }
-    return 0;
   }
 
   int _comparator(AssetRecord a, AssetRecord b) => _compareBy(_sortMode, a, b);
@@ -283,6 +282,8 @@ class AppState extends ChangeNotifier {
   // ------------------------------------------------------------ 启动与刷新
 
   Future<void> bootstrap() async {
+    // 重试时先清掉上一次的失败状态，成功后界面才能从错误页切回主界面。
+    _error = null;
     try {
       await _loadSettings();
       await reloadAll();
