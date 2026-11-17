@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -14,20 +13,17 @@ class ImportService {
   const ImportService._();
 
   static Future<ParsedImport?> pickAndParse() async {
-    final FilePickerResult? picked = await FilePicker.platform.pickFiles(
+    final PlatformFile? file = await FilePicker.pickFile(
+      dialogTitle: '选择导出的 zip 或 csv',
       type: FileType.custom,
       allowedExtensions: <String>['csv', 'zip'],
-      withData: true,
     );
-    if (picked == null || picked.files.isEmpty) {
+    if (file == null) {
       return null;
     }
-    final PlatformFile file = picked.files.single;
-    Uint8List? bytes = file.bytes;
-    if (bytes == null && file.path != null) {
-      bytes = await File(file.path!).readAsBytes();
-    }
-    if (bytes == null) {
+    // file_picker 12 起不再有 withData，字节由 PlatformFile 自己读。
+    final Uint8List bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
       throw const FormatException('读不到文件内容，请换一个文件试试');
     }
     return LedgerParser.parseBytes(bytes, file.name);
