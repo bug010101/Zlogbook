@@ -19,8 +19,8 @@ class ExportService {
       fieldDefs: state.fieldDefs,
     );
     final File file = await _writeTemp(bundle.fileName, bundle.bytes);
-    await Share.shareXFiles(
-      <XFile>[XFile(file.path)],
+    await _shareFile(
+      file,
       subject: '${AppInfo.name} 数据导出',
       text: '共 ${bundle.recordCount} 条记录',
     );
@@ -33,10 +33,26 @@ class ExportService {
       'zlogbook-import-template.csv',
       LedgerExporter.templateBytes(),
     );
-    await Share.shareXFiles(
-      <XFile>[XFile(file.path)],
+    await _shareFile(
+      file,
       subject: '${AppInfo.name} 导入模板',
       text: '照着这份表头填写即可导入',
+    );
+  }
+
+  /// share_plus 13 起只剩实例 API，静态的 Share.shareXFiles 已移除。
+  static Future<void> _shareFile(
+    File file, {
+    required String subject,
+    required String text,
+  }) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        files: <XFile>[XFile(file.path)],
+        title: subject,
+        subject: subject,
+        text: text,
+      ),
     );
   }
 

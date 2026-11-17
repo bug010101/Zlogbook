@@ -3,9 +3,11 @@ description: Zlogbook —— 纯本地的个人数字资产台账
 publish_to: "none"
 version: 1.0.0+1
 
+# 下限由依赖链决定：file_picker 13 要 Dart 3.10 / Flutter 3.38，
+# share_plus 13 要 Dart 3.10 / Flutter 3.38.1。写低只会让报错更难懂。
 environment:
-  sdk: ">=3.5.0 <4.0.0"
-  flutter: ">=3.24.0"
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.38.1"
 
 # 依赖策略：运行时依赖控制在 7 个，全部为活跃维护的官方/社区主流包。
 # 不引入代码生成（build_runner），CI 直接编译源码。
@@ -19,7 +21,8 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.4
   file_picker: ^13.4.0
-  share_plus: ^10.1.0
+  # 13.x 同时把 win32 拉到 ^6，才能与 file_picker 13 共存；10.x 卡在 win32 ^5。
+  share_plus: ^13.3.1
   # zip 打包：锁定 3.6.1，4.x 的 ArchiveFile/ZipEncoder API 有破坏性变更。
   archive: 3.6.1
 
